@@ -218,5 +218,4 @@ const GameCategories = ({
     // </section>
   );
 };
-
 export default GameCategories;
