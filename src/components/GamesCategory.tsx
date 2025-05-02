@@ -107,7 +107,6 @@ const GameCategories = ({
       transition: { duration: 0.2 },
     },
   };
-
   return (
     <section className="relative py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-900 to-gray-950 overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
