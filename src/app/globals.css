@@ -1,6 +1,16 @@
 @import "tailwindcss";
 body {
-  background-color: black;
-  color: white;
+  background-color: #121212;
+  color: #E0E0E0;
   font-family: Arial, Helvetica, sans-serif;
 }
+/* Color Type	Hex Code	Usage Example
+Primary Dark BG	#121212	Main background
+Secondary Dark	#1E1E1E	Cards, sidebars
+Accent (Neon Blue)	#00A8FF	Buttons, highlights
+Accent 2 (Electric Purple)	#9C27B0	Special actions
+Text (Light)	#E0E0E0	Body text
+Text (Dimmed)	#A0A0A0	Secondary text
+Success (Green)	#4CAF50	Win states, progress
+Warning (Amber)	#FFC107	Alerts, bonuses
+Error (Red)	#F44336	Errors, game over */

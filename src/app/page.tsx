@@ -12,7 +12,7 @@ const HomePage = () => {
               alt="game"
               className="w-full h-full object-cover rounded-2xl"
             />
-            <h4 className="text-center truncate">{game.name}</h4>
+            <h4 className="text-center truncate text-[#A0A0A0]">{game.name}</h4>
           </div>
         </Link>
       ))}
