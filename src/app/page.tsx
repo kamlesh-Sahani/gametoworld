@@ -21,7 +21,7 @@ const HomePage = () => {
             aria-label={`Play ${game.name}`}
             className="group"
           >
-            <div className={`relative transition-all duration-300 hover:scale-105 hover:shadow-xl ${game.bigSize ? "lg:col-span-2" : ""}`}>
+            <div className={`relative transition-all duration-300 hover:scale-105 hover:shadow-xl `}>
               {/* Game Card */}
               <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-gray-700/50">
                 <img
