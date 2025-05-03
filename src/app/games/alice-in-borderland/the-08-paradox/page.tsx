@@ -85,11 +85,7 @@ export default function The08Paradox() {
                 </button>
               ))}
             </div>
-            <div className="mt-4 flex justify-between">
-              <button className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-500 w-full cursor-pointer">
-                Submit
-              </button>
-            </div>
+          
           </div>
 
           {/* Right Panel - Player Status */}
