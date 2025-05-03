@@ -97,14 +97,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - Can be expanded with state */}
-      {/* <div className="md:hidden bg-gray-900 px-6 py-3">
-        {navItems.map((item) => (
-          <Link key={item.name} href={item.path} className="block py-2 text-gray-300 hover:text-white">
-            {item.name}
-          </Link>
-        ))}
-      </div> */}
+
     </motion.header>
   );
 };

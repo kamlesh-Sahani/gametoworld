@@ -1,21 +1,9 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import { useRef } from "react";
+import { motion} from "framer-motion";
 import { FaStar, FaPlay } from "react-icons/fa";
 import { GiGamepad } from "react-icons/gi";
-
-// interface Game {
-//   id: number;
-//   title: string;
-//   thumbnail: string;
-//   category: string;
-//   players: string;
-//   rating: number;
-//   tags: string[];
-//   isNew: boolean;
-//   playTime: string;
-// }
 
 const NewReleasesSection = ({ featuredGames }: any) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -45,7 +33,7 @@ const NewReleasesSection = ({ featuredGames }: any) => {
   };
 
   return (
-    <section className="relative bg-gradient-to-b from-gray-900 to-gray-950 py-16 px-4 overflow-hidden">
+    <section className="relative overflow-hidden mt-12">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-purple-600 rounded-full filter blur-3xl opacity-20"></div>
         <div className="absolute bottom-10 right-20 w-40 h-40 bg-cyan-600 rounded-full filter blur-3xl opacity-20"></div>
@@ -62,7 +50,7 @@ const NewReleasesSection = ({ featuredGames }: any) => {
             <GiGamepad className="text-purple-500 text-4xl mr-4" />
             <h2 className="text-4xl font-bold text-white">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">
-                New Releases
+                New Releases (comming soon..)
               </span>
             </h2>
           </motion.div>
@@ -82,7 +70,7 @@ const NewReleasesSection = ({ featuredGames }: any) => {
         <div className="relative ">
           <motion.div
             ref={scrollerRef}
-            className="grid xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-4 justify-start items-center "
+            className="flex flex-wrap gap-4 justify-center items-center "
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}

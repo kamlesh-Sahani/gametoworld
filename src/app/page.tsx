@@ -1,73 +1,8 @@
-// import React from "react";
-// import Link from "next/link";
-// import Image from "next/image";
-// import { gameDetail } from "@/data/game.data";
-
-// const HomePage = () => {
-//   return (
-//     <main className="container mx-auto px-4 py-10">
-//       <h1 className="text-4xl font-bold text-center mb-1  bg-clip-text text-white">
-//         Free Online Games
-//       </h1>
-//       <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto text-lg">
-//         Play hundreds of free online games in your browser. No downloads required - instant play!
-//       </p>
-//       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-//         {gameDetail.map((game) => (
-//           <Link
-//             href={game.redirectUrl}
-//             key={game._id}
-//             aria-label={`Play ${game.name}`}
-//             className="group"
-//           >
-//             <div className={`relative transition-all duration-300 hover:scale-105 hover:shadow-xl ${game.bigSize ? "lg:col-span-2" : ""}`}>
-//               {/* Game Card */}
-//               <div className="relative aspect-[4/3] rounded-xl overflow-hidden border border-gray-700/50">
-//                 <img
-//                   src={game.imgUrl}
-//                   alt={`${game.name} game thumbnail`}
-//                   className="w-full h-full object-cover group-hover:brightness-110 transition-all duration-300"
-//                   loading="lazy"
-//                   width={340}
-//                   height={255}
-//                 />
-
-//               </div>
-
-//               {/* Game Info */}
-//               <div className="mt-3">
-//                 <h2 className="text-white font-semibold text-lg truncate">
-//                   {game.name}
-//                 </h2>
-//                 <p className="text-gray-400 text-sm mt-1 line-clamp-3">
-//                   {game.description}
-//                 </p>
-//               </div>
-//             </div>
-//           </Link>
-//         ))}
-//       </div>
-
-//     </main>
-//   );
-// };
-
-// export default HomePage;
 "use client";
-import GameHeader from "@/components/GameHeader";
-import GameCategories from "@/components/GamesCategory";
+import GameSection from "@/components/GameSection";
 import NewReleasesSection from "@/components/NewReleases";
 import { useState } from "react";
-import {
-  FaSearch,
-  FaFire,
-  FaGamepad,
-  FaChessKnight,
-  FaRunning,
-  FaCarCrash,
-  FaPuzzlePiece,
-  FaHeadset,
-} from "react-icons/fa";
+import { FaFire, FaGamepad } from "react-icons/fa";
 import { GiPistolGun, GiPlatform, GiSoccerBall, GiBrain } from "react-icons/gi";
 interface Game {
   id: number;
@@ -82,9 +17,6 @@ interface Game {
 }
 
 const HomePage = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeCategory, setActiveCategory] = useState("all");
-
   const featuredGames = [
     {
       id: 1,
@@ -123,61 +55,18 @@ const HomePage = () => {
       tags: ["Competitive", "3D"],
     },
   ];
-
-  const categories = [
-    {
-      id: "all",
-      name: "All Games",
-      icon: <FaGamepad className="text-xl" />,
-      color: "from-purple-500 to-indigo-600",
-    },
-    {
-      id: "action",
-      name: "Action",
-      icon: <GiPistolGun className="text-xl" />,
-      color: "from-red-500 to-orange-500",
-    },
-    {
-      id: "adventure",
-      name: "Adventure",
-      icon: <GiPlatform className="text-xl" />,
-      color: "from-green-500 to-teal-500",
-    },
-    {
-      id: "sports",
-      name: "Sports",
-      icon: <GiSoccerBall className="text-xl" />,
-      color: "from-blue-500 to-cyan-500",
-    },
-    {
-      id: "racing",
-      name: "Racing",
-      icon: <FaCarCrash className="text-xl" />,
-      color: "from-yellow-500 to-amber-500",
-    },
-    {
-      id: "puzzle",
-      name: "Puzzle",
-      icon: <GiBrain className="text-xl" />,
-      color: "from-pink-500 to-rose-500",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white w-full">
-      <GameHeader searchQuery={searchQuery} setSearchQuery={searchQuery}/>
+    <div className="">
+  
 
+      <GameSection />
 
-      <GameCategories
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
-      <section className="container mx-auto px-4 py-12">
+      <section className="">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold flex items-center">
             <FaFire className="mr-3 text-orange-400" />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-red-400">
-              Trending Now
+              Trending Now (Coming soon)
             </span>
           </h2>
           <button className="flex items-center text-purple-400 hover:text-purple-300 transition-colors">
@@ -185,7 +74,7 @@ const HomePage = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex flex-wrap gap-7 justify-center items-center">
           {featuredGames.map((game) => (
             <div
               key={game.id}
