@@ -1,19 +1,19 @@
 "use client";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { useSocket } from "@/context/Socket.context";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-interface JoinDetailProps {
-  setActiveTab: (tab: "join" | "create") => void;
-  activeTab: "join" | "create";
-}
-
-const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
+const JoinDetail = ({setGameStarted,setMaxRounds,maxRounds}:{
+  setGameStarted:Dispatch<SetStateAction<boolean>>
+  setMaxRounds:Dispatch<SetStateAction<number>>
+  maxRounds:number;
+}) => {
   const [playerName, setPlayerName] = useState("");
   const [roomCode, setRoomCode] = useState<string>("");
-  const [rounds, setRounds] = useState<number>(5);
+
   const [loading, setLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState("join"); // 'join' or 'create'
   const { socket } = useSocket();
   const router = useRouter();
   const handleJoinRoom = async () => {
@@ -38,7 +38,8 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
             setLoading(false);
             socket.disconnect();
           } else {
-            router.push(`/game/${response.gameId}`);
+            setGameStarted(true);
+            router.push(`/games/alice-in-borderland/the-08-paradox?id=${response.gameId}`);
           }
         }
       );
@@ -64,18 +65,20 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
       socket.connect();
 
       socket.emit(
-        "createGame",~
+        "createGame",
         {
-          rounds,
+          rounds:maxRounds,
           playerName,
         },
         (response: { error?: string; gameId?: string }) => {
+      
           if (response.error) {
-            console.log(response);
+          
             setLoading(false);
             socket.disconnect();
           } else {
-            router.push(`/game/${response.gameId}`);
+            setGameStarted(true);
+            router.push(`/games/alice-in-borderland/the-08-paradox?id=${response.gameId}`);
           }
         }
       );
@@ -88,7 +91,6 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-gray-800/90 backdrop-blur-md rounded-xl p-8 w-full max-w-md border border-red-600/50 shadow-lg shadow-red-900/20">
-        {/* Game Title with Diamond Theme */}
         <div className="text-center mb-8 relative">
           <div className="absolute -top-6 -left-6 w-12 h-12 bg-red-600 rotate-45 opacity-20"></div>
           <div className="absolute -bottom-6 -right-6 w-12 h-12 bg-red-600 rotate-45 opacity-20"></div>
@@ -109,16 +111,18 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
                   : "text-gray-300 hover:text-white"
               }`}
               onClick={() => setActiveTab("join")}
+              type="button"
             >
               JOIN GAME
             </button>
             <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors  cursor-pointer ${
                 activeTab === "create"
                   ? "bg-red-600 text-white shadow-md shadow-red-900/50"
                   : "text-gray-300 hover:text-white"
               }`}
               onClick={() => setActiveTab("create")}
+                type="button"
             >
               CREATE GAME
             </button>
@@ -157,7 +161,8 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
             <button
               onClick={handleJoinRoom}
               disabled={!playerName || !roomCode}
-              className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center ${
+                type="button"
+              className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center  cursor-pointer ${
                 !playerName || !roomCode
                   ? "bg-gray-700 cursor-not-allowed"
                   : "bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/30"
@@ -179,8 +184,8 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
                     ROUNDS
                   </label>
                   <select
-                    value={rounds}
-                    onChange={(e) => setRounds(Number(e.target.value))}
+                    value={maxRounds}
+                    onChange={(e) => setMaxRounds(Number(e.target.value))}
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm font-mono"
                   >
                     {[3, 5, 7].map((num) => (
@@ -195,11 +200,12 @@ const JoinDetail: React.FC<JoinDetailProps> = ({ setActiveTab, activeTab }) => {
             <button
               onClick={handleCreateRoom}
               disabled={!playerName}
-              className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center ${
+              className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center cursor-pointer ${
                 !playerName
                   ? "bg-gray-700 cursor-not-allowed"
                   : "bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/30"
               }`}
+                type="button"
             >
               INITIATE GAME
             </button>
