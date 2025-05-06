@@ -15,6 +15,8 @@ interface PlayerType {
   score: number;
   isEliminated: boolean;
   isHost?: boolean;
+  owner?:boolean;
+
 }
 
 export default function The08Paradox() {
@@ -31,6 +33,7 @@ export default function The08Paradox() {
   const [gameResult, setGameResult] = useState<any>(null);
   const [playerName, setPlayerName] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
+  
   const { width, height } = useWindowSize();
 
   const searchParams = useSearchParams();
@@ -81,11 +84,15 @@ export default function The08Paradox() {
 
   const startGame = () => {
     if (socket && gameId) {
-      socket.emit("startGame", { gameId }, (response: any) => {
-        if (response.error) {
-          toast.error(response.error);
+      socket.emit(
+        "startGame",
+        { gameId, playerId: socket.id },
+        (response: any) => {
+          if (response.error) {
+            toast.error(response.error);
+          }
         }
-      });
+      );
     }
   };
 
@@ -115,6 +122,7 @@ export default function The08Paradox() {
       );
     }
     socket.on("updatePlayers", (players: PlayerType[]) => {
+      console.log(players,"playeers")
       setPlayerData(players);
       const current = players.find((p) => p.playerId === socket.id);
       if (current) setCurrentPlayer(current);
@@ -140,7 +148,6 @@ export default function The08Paradox() {
       setPlayerData(updatedPlayers);
       setGameStatus("playing");
       setSelectedNumber(null);
-      setGameResult(null);
       toast(`Round ${newRound} started!`, { icon: "🎮" });
     });
 
@@ -160,7 +167,6 @@ export default function The08Paradox() {
         )
       );
     });
-
     return () => {
       socket.off("updatePlayers");
       socket.off("gameStarted");
@@ -172,6 +178,7 @@ export default function The08Paradox() {
     };
   }, [socket, gameId, fireConfetti]);
 
+  console.log(currentPlayer,isHost,gameStatus,"test")
   if (!gameId || !gameStarted) {
     return (
       <JoinDetail
@@ -236,7 +243,7 @@ export default function The08Paradox() {
             <span className="text-xs text-gray-400">Your Name: </span>
             <span>{playerName}</span>
           </div>
-          {isHost && gameStatus === "waiting" && (
+          {currentPlayer?.isHost && gameStatus === "waiting" && (
             <button
               onClick={startGame}
               disabled={playerData.length < 2}
@@ -275,18 +282,18 @@ export default function The08Paradox() {
             </div>
 
             {gameStatus === "waiting" ? (
-              <div className="mt-8 text-center">
-                <button
-                  onClick={startGame}
-                  disabled={playerData.length < 2}
-                  className={`relative overflow-hidden px-8 py-3 rounded-lg font-bold text-white transition-all duration-300 shadow-lg cursor-pointer ${
-                    playerData.length < 2
-                      ? "bg-gray-700 cursor-not-allowed"
-                      : "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 transform hover:scale-105"
-                  }`}
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    {playerData.length < 2 ? (
+              currentPlayer && !currentPlayer.isHost ? (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={startGame}
+                    disabled={playerData.length < 2}
+                    className={`relative overflow-hidden px-8 py-3 rounded-lg font-bold text-white transition-all duration-300 shadow-lg cursor-pointer ${
+                      playerData.length < 2
+                        ? "bg-gray-700 cursor-not-allowed"
+                        : "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 transform hover:scale-105"
+                    }`}
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
                       <>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -300,41 +307,80 @@ export default function The08Paradox() {
                             clipRule="evenodd"
                           />
                         </svg>
-                        Need {2 - playerData.length} more players
+                        Wait to start
                       </>
-                    ) : (
-                      <>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        START GAME
-                      </>
-                    )}
-                  </span>
-                  {/* Animated background elements */}
-                  <span className="absolute top-0 left-0 w-full h-full bg-white opacity-0 hover:opacity-10 transition-opacity duration-300"></span>
-                  <span className="absolute -top-1 -left-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></span>
-                  <span
-                    className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"
-                    style={{ animationDelay: "0.3s" }}
-                  ></span>
-                </button>
-                {playerData.length < 2 && (
-                  <p className="text-xs text-gray-400 mt-2">
-                    Waiting for {2 - playerData.length} more player
-                    {playerData.length === 0 ? "s" : ""} to join...
-                  </p>
-                )}
-              </div>
+                    </span>
+                    {/* Animated background elements */}
+                    <span className="absolute top-0 left-0 w-full h-full bg-white opacity-0 hover:opacity-10 transition-opacity duration-300"></span>
+                    <span className="absolute -top-1 -left-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></span>
+                    <span
+                      className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"
+                      style={{ animationDelay: "0.3s" }}
+                    ></span>
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={startGame}
+                    disabled={playerData.length < 2}
+                    className={`relative overflow-hidden px-8 py-3 rounded-lg font-bold text-white transition-all duration-300 shadow-lg cursor-pointer ${
+                      playerData.length < 2
+                        ? "bg-gray-700 cursor-not-allowed"
+                        : "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 transform hover:scale-105"
+                    }`}
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {playerData.length < 2 ? (
+                        <>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Need {2 - playerData.length} more players
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          START GAME
+                        </>
+                      )}
+                    </span>
+                    {/* Animated background elements */}
+                    <span className="absolute top-0 left-0 w-full h-full bg-white opacity-0 hover:opacity-10 transition-opacity duration-300"></span>
+                    <span className="absolute -top-1 -left-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></span>
+                    <span
+                      className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"
+                      style={{ animationDelay: "0.3s" }}
+                    ></span>
+                  </button>
+                  {playerData.length < 2 && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Waiting for {2 - playerData.length} more player
+                      {playerData.length === 0 ? "s" : ""} to join...
+                    </p>
+                  )}
+                </div>
+              )
             ) : (
               <>
                 {/* Number Grid */}
