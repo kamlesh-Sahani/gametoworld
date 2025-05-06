@@ -118,7 +118,6 @@ export default function The08Paradox() {
   };
 
   const submitNumber = () => {
-    console.log(selectedNumber, "selectedNumber");
     if (selectedNumber && socket && gameId) {
       toast.success(`${selectedNumber} is selected successfully`);
       socket.emit("submitNumber", {
@@ -137,7 +136,7 @@ export default function The08Paradox() {
   };
   useEffect(() => {
     changeRoundResult(roundHistory.length - 1);
-  }, []);
+  }, [roundHistory]);
 
   useEffect(() => {
     if (!socket) {
