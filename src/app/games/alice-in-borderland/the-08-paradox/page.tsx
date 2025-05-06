@@ -15,25 +15,33 @@ interface PlayerType {
   score: number;
   isEliminated: boolean;
   isHost?: boolean;
-  owner?:boolean;
+  owner?: boolean;
+}
 
+interface RoundResult {
+  round: number;
+  average?: number;
+  target?: number;
+  winner?: PlayerType | null;
+  players: PlayerType[];
 }
 
 export default function The08Paradox() {
   const [gameStarted, setGameStarted] = useState(false);
-  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const [selectedNumber, setSelectedNumber] = useState<number|null>(null);
   const [playerData, setPlayerData] = useState<PlayerType[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<PlayerType | null>(null);
   const [gameStatus, setGameStatus] = useState<
-    "waiting" | "playing" | "finished"
+    "waiting" | "playing" | "finished" | "counting"
   >("waiting");
   const [countdown, setCountdown] = useState(0);
   const [round, setRound] = useState(0);
   const [maxRounds, setMaxRounds] = useState(5);
   const [gameResult, setGameResult] = useState<any>(null);
+  const [roundHistory, setRoundHistory] = useState<RoundResult[]>([]);
   const [playerName, setPlayerName] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
-  
+
   const { width, height } = useWindowSize();
 
   const searchParams = useSearchParams();
@@ -52,6 +60,16 @@ export default function The08Paradox() {
     setTimeout(() => setShowConfetti(false), 5000);
   }, []);
 
+  const fetchRoundHistory = useCallback(() => {
+    if (socket && gameId) {
+      socket.emit("getRoundHistory", { gameId }, (response: any) => {
+        if (response.success) {
+          setRoundHistory(response.roundHistory);
+        }
+      });
+    }
+  }, [socket, gameId]);
+
   const handleProfileResponse = (response: any) => {
     if (response.error) {
       if (!response.success && socket) {
@@ -69,6 +87,7 @@ export default function The08Paradox() {
               setGameStarted(false);
             } else {
               setGameStarted(true);
+              fetchRoundHistory();
             }
           }
         );
@@ -79,6 +98,7 @@ export default function The08Paradox() {
     } else {
       setGameStarted(true);
       setPlayerName(response.player?.playerName || "");
+      fetchRoundHistory();
     }
   };
 
@@ -97,10 +117,14 @@ export default function The08Paradox() {
   };
 
   const submitNumber = () => {
+    console.log(selectedNumber,"selectedNumber")
     if (selectedNumber && socket && gameId) {
+
+      toast.success(`${selectedNumber} is selected successfully`)
       socket.emit("submitNumber", {
         gameId,
         number: selectedNumber,
+        playerId:socket.id
       });
     }
   };
@@ -121,8 +145,8 @@ export default function The08Paradox() {
         handleProfileResponse
       );
     }
+
     socket.on("updatePlayers", (players: PlayerType[]) => {
-      console.log(players,"playeers")
       setPlayerData(players);
       const current = players.find((p) => p.playerId === socket.id);
       if (current) setCurrentPlayer(current);
@@ -131,6 +155,7 @@ export default function The08Paradox() {
     socket.on("gameStarted", () => {
       setGameStatus("playing");
       toast.success("Game started!");
+      fetchRoundHistory();
     });
 
     socket.on("countdownUpdate", (time: number) => {
@@ -140,6 +165,7 @@ export default function The08Paradox() {
     socket.on("roundResult", (result: any) => {
       setGameResult(result);
       setGameStatus("finished");
+      fetchRoundHistory();
       fireConfetti();
     });
 
@@ -149,11 +175,13 @@ export default function The08Paradox() {
       setGameStatus("playing");
       setSelectedNumber(null);
       toast(`Round ${newRound} started!`, { icon: "🎮" });
+      fetchRoundHistory();
     });
 
     socket.on("gameOver", (result: any) => {
       setGameResult(result);
       setGameStatus("finished");
+      setRoundHistory(result.roundHistory || []);
       toast.success(
         result.winners ? `${result.winners.playerName} wins!` : "Game over!"
       );
@@ -167,6 +195,7 @@ export default function The08Paradox() {
         )
       );
     });
+
     return () => {
       socket.off("updatePlayers");
       socket.off("gameStarted");
@@ -176,9 +205,8 @@ export default function The08Paradox() {
       socket.off("gameOver");
       socket.off("playerSubmitted");
     };
-  }, [socket, gameId, fireConfetti]);
+  }, [socket, gameId, fireConfetti, fetchRoundHistory]);
 
-  console.log(currentPlayer,isHost,gameStatus,"test")
   if (!gameId || !gameStarted) {
     return (
       <JoinDetail
@@ -189,6 +217,15 @@ export default function The08Paradox() {
     );
   }
 
+  // Get the current round result or the last completed round
+  const currentRoundResult =
+    roundHistory.find((r) => r.round === round) ||
+    roundHistory[roundHistory.length - 1];
+
+
+    console.log(playerData,"playerData PLAYER STATUS ")
+
+    console.log(gameResult,"game result")
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 relative">
       {/* Confetti Celebration */}
@@ -218,7 +255,7 @@ export default function The08Paradox() {
               className={`px-2 py-1 text-xs rounded-full ${
                 gameStatus === "waiting"
                   ? "bg-yellow-500/20 text-yellow-400"
-                  : gameStatus === "playing"
+                  : gameStatus === "playing" || gameStatus === "counting"
                   ? "bg-green-500/20 text-green-400"
                   : "bg-purple-500/20 text-purple-400"
               }`}
@@ -264,6 +301,8 @@ export default function The08Paradox() {
             <h2 className="text-xl font-bold mb-4 text-red-400 font-mono tracking-wider border-b border-gray-700 pb-2">
               {gameStatus === "finished"
                 ? "ROUND RESULTS"
+                : gameStatus === "counting"
+                ? "COUNTDOWN"
                 : "SELECT YOUR NUMBER"}
             </h2>
 
@@ -274,6 +313,8 @@ export default function The08Paradox() {
                   ? "WAITING TO START"
                   : gameStatus === "finished"
                   ? "ROUND COMPLETE"
+                  : gameStatus === "counting"
+                  ? "COUNTING DOWN"
                   : "TIME REMAINING"}
               </p>
               <div className="text-3xl font-bold text-red-500">
@@ -282,7 +323,7 @@ export default function The08Paradox() {
             </div>
 
             {gameStatus === "waiting" ? (
-              currentPlayer && !currentPlayer.isHost ? (
+              currentPlayer && currentPlayer.isHost ? (
                 <div className="mt-8 text-center">
                   <button
                     onClick={startGame}
@@ -390,7 +431,7 @@ export default function The08Paradox() {
                       key={num}
                       onClick={() => setSelectedNumber(num)}
                       disabled={gameStatus !== "playing"}
-                      className={`py-1 px-0 rounded text-xs font-mono transition-all ${
+                      className={`py-1 px-0 rounded text-xs font-mono transition-all cursor-pointer ${
                         selectedNumber === num
                           ? "bg-red-600 text-white scale-105 shadow-md shadow-red-900/50"
                           : gameStatus === "playing"
@@ -448,6 +489,11 @@ export default function The08Paradox() {
                             (YOU)
                           </span>
                         )}
+                        {player.isHost && (
+                          <span className="text-xs text-yellow-400 ml-2">
+                            (HOST)
+                          </span>
+                        )}
                       </div>
                       <div className="text-right">
                         <div
@@ -468,64 +514,104 @@ export default function The08Paradox() {
               </div>
             </div>
 
-            {/* Last Round Results */}
+            {/* Round Results */}
             <div className="bg-gray-800/90 border border-red-600/30 rounded-xl p-6 shadow-lg shadow-red-900/10">
               <h2 className="text-xl font-bold mb-4 text-red-400 font-mono tracking-wider border-b border-gray-700 pb-2">
-                LAST ROUND
+                {currentRoundResult
+                  ? `ROUND ${currentRoundResult.round}`
+                  : "ROUND RESULTS"}
               </h2>
 
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Average:</span>
-                  <span className="font-bold">
-                    {gameResult?.average?.toFixed(1)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Target (×0.8):</span>
-                  <span className="font-bold text-red-400">
-                    {gameResult?.target?.toFixed(1)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Winner:</span>
-                  <span className="font-bold text-green-400">
-                    {gameResult?.winner?.playerName}
-                  </span>
-                </div>
+              {currentRoundResult ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Average:</span>
+                    <span className="font-bold">
+                      {currentRoundResult.average?.toFixed(1) || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Target (×0.8):</span>
+                    <span className="font-bold text-red-400">
+                      {currentRoundResult.target?.toFixed(1) || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Winner:</span>
+                    <span className="font-bold text-green-400">
+                      {currentRoundResult.winner?.playerName || "N/A"}
+                    </span>
+                  </div>
 
-                <div className="mt-4 p-3 bg-gray-900/50 rounded-lg">
-                  <h3 className="text-sm font-bold text-red-400 mb-2">
-                    POINT CHANGES
-                  </h3>
-                  {gameResult &&
-                    gameResult?.players.map((player: PlayerType) => (
+                  <div className="mt-4 p-3 bg-gray-900/50 rounded-lg">
+                    <h3 className="text-sm font-bold text-red-400 mb-2">
+                      POINT CHANGES
+                    </h3>
+                    {currentRoundResult.players.map((player: PlayerType) => (
                       <div
-                        key={player?.playerId}
+                        key={player.playerId}
                         className="flex justify-between text-sm py-1 border-b border-gray-800 last:border-0"
                       >
                         <span
                           className={player.isEliminated ? "text-gray-500" : ""}
                         >
-                          {player?.playerName}
+                          {player.playerName}
                         </span>
                         <span
                           className={
-                            player?.playerId === gameResult?.winner?.playerId
+                            player.playerId ===
+                            currentRoundResult.winner?.playerId
                               ? "text-green-400"
                               : player.isEliminated
                               ? "text-gray-500"
                               : "text-red-400"
                           }
                         >
-                          {player?.playerId === gameResult?.winner?.playerId
+                          {player.playerId ===
+                          currentRoundResult.winner?.playerId
                             ? "+3"
                             : "-3"}
                         </span>
                       </div>
                     ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-gray-500 text-center py-4">
+                  No round results available yet
+                </div>
+              )}
+
+              {/* Round History Selector */}
+              {roundHistory.length > 1 && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-bold text-red-400 mb-2">
+                    VIEW OTHER ROUNDS
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {roundHistory.map((roundItem) => (
+                      <button
+                        key={roundItem.round}
+                        onClick={() => {
+                          const roundToShow = roundHistory.find(
+                            (r) => r.round === roundItem.round
+                          );
+                          if (roundToShow) {
+                            setGameResult(roundToShow);
+                          }
+                        }}
+                        className={`px-3 py-1 text-xs rounded ${
+                          currentRoundResult?.round === roundItem.round
+                            ? "bg-red-600 text-white"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Round {roundItem.round}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
