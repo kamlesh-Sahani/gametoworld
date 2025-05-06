@@ -218,9 +218,19 @@ export default function The08Paradox() {
   }
 
   // Get the current round result or the last completed round
-  const currentRoundResult =
+
+  const [currentRoundResult,setCurrentRoundResult] = useState<any>();
+  const changeRoundResult  = (round:number)=>{
+    const currentRoundResult =
     roundHistory.find((r) => r.round === round) ||
     roundHistory[roundHistory.length - 1];
+
+    setCurrentRoundResult(currentRoundResult)
+  }
+  useEffect(()=>{
+
+  },[])
+  
 
 
     console.log(playerData,"playerData PLAYER STATUS ")
@@ -593,12 +603,7 @@ export default function The08Paradox() {
                       <button
                         key={roundItem.round}
                         onClick={() => {
-                          const roundToShow = roundHistory.find(
-                            (r) => r.round === roundItem.round
-                          );
-                          if (roundToShow) {
-                            setGameResult(roundToShow);
-                          }
+                          changeRoundResult(roundItem.round);
                         }}
                         className={`px-3 py-1 text-xs rounded ${
                           currentRoundResult?.round === roundItem.round
