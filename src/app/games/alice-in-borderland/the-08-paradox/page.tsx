@@ -28,7 +28,7 @@ interface RoundResult {
 
 export default function The08Paradox() {
   const [gameStarted, setGameStarted] = useState(false);
-  const [selectedNumber, setSelectedNumber] = useState<number|null>(null);
+  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [playerData, setPlayerData] = useState<PlayerType[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<PlayerType | null>(null);
   const [gameStatus, setGameStatus] = useState<
@@ -41,14 +41,12 @@ export default function The08Paradox() {
   const [roundHistory, setRoundHistory] = useState<RoundResult[]>([]);
   const [playerName, setPlayerName] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
-
+  const [currentRoundResult, setCurrentRoundResult] = useState<any>();
   const { width, height } = useWindowSize();
 
   const searchParams = useSearchParams();
   const { socket } = useSocket();
   const gameId = searchParams.get("id");
-  const isHost = currentPlayer?.isHost;
-
   const fireConfetti = useCallback(() => {
     confetti({
       particleCount: 150,
@@ -103,6 +101,9 @@ export default function The08Paradox() {
   };
 
   const startGame = () => {
+    if(!currentPlayer?.isHost){
+      return;
+    }
     if (socket && gameId) {
       socket.emit(
         "startGame",
@@ -117,17 +118,26 @@ export default function The08Paradox() {
   };
 
   const submitNumber = () => {
-    console.log(selectedNumber,"selectedNumber")
+    console.log(selectedNumber, "selectedNumber");
     if (selectedNumber && socket && gameId) {
-
-      toast.success(`${selectedNumber} is selected successfully`)
+      toast.success(`${selectedNumber} is selected successfully`);
       socket.emit("submitNumber", {
         gameId,
         number: selectedNumber,
-        playerId:socket.id
+        playerId: socket.id,
       });
     }
   };
+  const changeRoundResult = (round: number) => {
+    const currentRoundResult =
+      roundHistory.find((r) => r.round === round) ||
+      roundHistory[roundHistory.length - 1];
+
+    setCurrentRoundResult(currentRoundResult);
+  };
+  useEffect(() => {
+    changeRoundResult(roundHistory.length - 1);
+  }, []);
 
   useEffect(() => {
     if (!socket) {
@@ -217,25 +227,6 @@ export default function The08Paradox() {
     );
   }
 
-  // Get the current round result or the last completed round
-
-  const [currentRoundResult,setCurrentRoundResult] = useState<any>();
-  const changeRoundResult  = (round:number)=>{
-    const currentRoundResult =
-    roundHistory.find((r) => r.round === round) ||
-    roundHistory[roundHistory.length - 1];
-
-    setCurrentRoundResult(currentRoundResult)
-  }
-  useEffect(()=>{
-
-  },[])
-  
-
-
-    console.log(playerData,"playerData PLAYER STATUS ")
-
-    console.log(gameResult,"game result")
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 relative">
       {/* Confetti Celebration */}
@@ -290,19 +281,6 @@ export default function The08Paradox() {
             <span className="text-xs text-gray-400">Your Name: </span>
             <span>{playerName}</span>
           </div>
-          {currentPlayer?.isHost && gameStatus === "waiting" && (
-            <button
-              onClick={startGame}
-              disabled={playerData.length < 2}
-              className={`px-4 py-2 rounded-lg font-bold ${
-                playerData.length < 2
-                  ? "bg-gray-700 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-            >
-              {playerData.length < 2 ? "Need more players" : "Start Game"}
-            </button>
-          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -333,7 +311,7 @@ export default function The08Paradox() {
             </div>
 
             {gameStatus === "waiting" ? (
-              currentPlayer && currentPlayer.isHost ? (
+              currentPlayer && !currentPlayer.isHost ? (
                 <div className="mt-8 text-center">
                   <button
                     onClick={startGame}
@@ -457,7 +435,7 @@ export default function The08Paradox() {
                 <button
                   onClick={submitNumber}
                   disabled={!selectedNumber || gameStatus !== "playing"}
-                  className={`w-full mt-6 py-3 rounded-lg font-bold text-white transition-all ${
+                  className={`w-full mt-6 py-3 rounded-lg font-bold text-white transition-all cursor-pointer ${
                     !selectedNumber || gameStatus !== "playing"
                       ? "bg-gray-700 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/30"
@@ -557,33 +535,36 @@ export default function The08Paradox() {
                     <h3 className="text-sm font-bold text-red-400 mb-2">
                       POINT CHANGES
                     </h3>
-                    {currentRoundResult.players.map((player: PlayerType) => (
-                      <div
-                        key={player.playerId}
-                        className="flex justify-between text-sm py-1 border-b border-gray-800 last:border-0"
-                      >
-                        <span
-                          className={player.isEliminated ? "text-gray-500" : ""}
+                    {currentRoundResult &&
+                      currentRoundResult.players.map((player: PlayerType) => (
+                        <div
+                          key={player.playerId}
+                          className="flex justify-between text-sm py-1 border-b border-gray-800 last:border-0"
                         >
-                          {player.playerName}
-                        </span>
-                        <span
-                          className={
-                            player.playerId ===
+                          <span
+                            className={
+                              player.isEliminated ? "text-gray-500" : ""
+                            }
+                          >
+                            {player.playerName}
+                          </span>
+                          <span
+                            className={
+                              player.playerId ===
+                              currentRoundResult.winner?.playerId
+                                ? "text-green-400"
+                                : player.isEliminated
+                                ? "text-gray-500"
+                                : "text-red-400"
+                            }
+                          >
+                            {player.playerId ===
                             currentRoundResult.winner?.playerId
-                              ? "text-green-400"
-                              : player.isEliminated
-                              ? "text-gray-500"
-                              : "text-red-400"
-                          }
-                        >
-                          {player.playerId ===
-                          currentRoundResult.winner?.playerId
-                            ? "+3"
-                            : "-3"}
-                        </span>
-                      </div>
-                    ))}
+                              ? "+3"
+                              : "-3"}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               ) : (
